@@ -1,0 +1,23 @@
+{
+  "name": "reactdi",
+  "version": "0.0.1",
+  "authors": [
+    "Matthew Tretter <m@tthewwithanm.com>"
+  ],
+  "description": "Dependency injection for ReactJS",
+  "main": "reactdi.js",
+  "keywords": [
+    "url",
+    "parsing",
+    "parser"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/hzdg/reactdi",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
