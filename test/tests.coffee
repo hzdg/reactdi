@@ -8,7 +8,7 @@ NONCE = {}
 
 
 Component = React.createClass
-  getInitialProps: ->
+  getDefaultProps: ->
     default: 'value'
     nullDefault: null
   render: ->
