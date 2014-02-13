@@ -26,9 +26,6 @@
     "type": "git",
     "url": "git://github.com/hzdg/reactdi.git"
   },
-  "publishConfig": {
-    "registry": "http://npmregistry.hzdg.com/"
-  },
   "keywords": [
     "javascript",
     "browser"
