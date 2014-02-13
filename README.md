@@ -115,7 +115,9 @@ var GrandParent = React.createClass({
 var Parent = React.createClass({
     render: function () {
         var di = reactdi().map({subject: 'world'});
-        return Child();
+        return di(function () {
+            return Child();
+        });
     }
 });
 
@@ -145,7 +147,9 @@ var GrandParent = React.createClass({
 var Parent = React.createClass({
     render: function () {
         var di = reactdi({isolate: true}).map({subject: 'world'});
-        return Child();
+        return di(function () {
+            return Child();
+        });
     }
 });
 
