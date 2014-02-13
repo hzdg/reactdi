@@ -206,7 +206,67 @@ var di = reactdi()
 
 ## Events
 
-TODO
+By default, reactdi will only inject props that aren't set explicitly by the
+parent component. You can force it to override those values by passing
+`{override: true}` as an option when configuring your mappings. However, there's
+one common case where you don't want either of these behaviors: event handling.
+
+In ReactJS, event handling is done by [passing callbacks as props][callbacks].
+This works out fine as long as only one thing (the parent component) needs to
+listen. But with reactdi, you now have access to deeply nested components from
+other locations. In order to let you hook into component events without
+overriding the handlers their parents have set, reactdi provides the `on`
+method:
+
+```javascript
+var Grandparent = React.createClass({
+    render: function () {
+      return reactdi()
+        .on('change', function () { console.log('something changed!') })
+        .inject(function () {
+          return Parent();
+        });
+    }
+});
+
+var Parent = React.createClass({
+    handleChildChange: function () {
+        console.log('my kid changed!');
+    },
+    render: function () {
+      return Child({onChange: this.handleChildChange});
+    }
+});
+
+var Child = React.createClass({
+    handleClick: function () {
+        this.props.onChange();
+    },
+    render: function () {
+        return div({onClick: this.handleClick});
+    }
+});
+```
+
+Now the `Grandparent` can know when one of its descendants has changed without.
+Notice that the `Parent` is blissfully unaware that this is happening; its
+callback will execute normally.
+
+Like the `map*` functions, `on` can be easily scoped to particular component
+types:
+
+```javascript
+var Grandparent = React.createClass({
+    render: function () {
+      return reactdi()
+        .on(Child, 'change', function () { console.log('a Child changed!') })
+        .inject(function () {
+          return Parent();
+        });
+    }
+});
+```
 
 
 [ReactJS]: http://reactjs.org
+[callbacks]: http://facebook.github.io/react/docs/tutorial.html#callbacks-as-props
