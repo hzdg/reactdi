@@ -274,10 +274,10 @@ Calling `reactdi` will return an injector. Below is the API for an injector
 ("di"):
 
 <table>
-    <th>
-        <td>Method</td>
-        <td>Description</td>
-    </th>
+    <tr>
+        <th>Method</th>
+        <th>Description</th>
+    </tr>
     <tr>
         <td><code>di(<i>scopedCallback</i>)</code></td>
         <td>
