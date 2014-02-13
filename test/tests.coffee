@@ -111,3 +111,19 @@ describe 'reactdi', ->
               winston.props.onBark()
               assert.equal barkCount, 1
               assert.equal injectedBarkCount, 2
+    it 'should inject into components created in render method', ->
+      Grandparent = React.createClass
+        render: ->
+          reactdi()
+            .map thing: 'INJECTED'
+            .inject ->
+              Parent()
+
+      Parent = React.createClass
+        render: -> Child()
+
+      Child = React.createClass
+        render: -> div(null, this.props.thing)
+
+      html = React.renderComponentToString Grandparent()
+      assert.match html, /INJECTED/

@@ -64,18 +64,30 @@ def (React) ->
     oldConstruct = constructor::construct
     constructor::construct = (initialProps, args...) ->
       props = initialProps or {}
+      @_injectors = activeInjectors[..] # Store the currently active injectors.
       for injector in activeInjectors by -1
         props = injector.buildProps this, props
         break if injector.isolate
       oldConstruct.call this, props, args...
 
+    oldRender = constructor::render
+    constructor::render = (args...) ->
+      # Restore the injectors that were active when the class was created for
+      # the duration of the render method.
+      withInjectors @_injectors, => oldRender.call this, args...
+
     Cls
 
-  withInjector = (injector, scopedCallback) ->
-    activeInjectors.push injector
+  # Add a list of injectors to the stack for the duration of `scopedCallback`
+  withInjectors = (injectors, scopedCallback) ->
+    activeInjectors.push injectors...
     try result = scopedCallback()
-    finally activeInjectors.pop()
+    finally activeInjectors = activeInjectors[...-injectors.length]
     result
+
+  # Add a single injector to the stack for the duration of `scopedCallback`
+  withInjector = (injector, scopedCallback) ->
+    withInjectors [injector], scopedCallback
 
   class Injector
     constructor: (options) ->
