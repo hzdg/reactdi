@@ -127,3 +127,30 @@ describe 'reactdi', ->
 
       html = React.renderComponentToString Grandparent()
       assert.match html, /INJECTED/
+    it 'should chain event handlers highest last', ->
+      observations = []
+
+      Grandparent = React.createClass
+        render: ->
+          reactdi()
+            .on Child, 'change', -> observations.push 'grandparent'
+            .inject ->
+              Parent()
+
+      Parent = React.createClass
+        handleChildChange: -> observations.push 'parent'
+        render: ->
+          c = Child onChange: this.handleChildChange
+          c.handleClick()  # Normally this would occur in "Child" because of user interaction.
+          c
+
+      Child = React.createClass
+        handleClick: -> @props.onChange()
+        render: -> div()
+
+      reactdi()
+        .on 'change', -> observations.push 'top'
+        .inject ->
+          React.renderComponentToString Grandparent()
+
+      assert.deepEqual observations, ['parent', 'grandparent', 'top'], 'Events observed in wrong order'
