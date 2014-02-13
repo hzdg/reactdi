@@ -17,6 +17,20 @@ def (React) ->
 
   injectors = []
 
+  # A utility for parsing args for the map* methods. Returns a new function
+  # that invokes the provided one with the correct positional args.
+  parseMapArgs = (mapArgTypes, fn) ->
+    (args...) ->
+      newArgs = args[...mapArgTypes.length]
+      [optsOrTest, test] = args[mapArgTypes...]
+      if typeof optsOrTest is 'function'
+        options = {}
+        test = optsOrTest
+      else
+        options = optsOrTest ? {}
+        test ?= -> true
+      fn.apply this, newArgs.concat [options, test]
+
   # Patch the class factory to add dependencies to props dict.
   oldCreateClass = React.createClass
   React.createClass = (args...) ->
@@ -44,9 +58,9 @@ def (React) ->
       @rules = []
       @isolate = !!options?.isolate
 
-    map: (props, optsOrTest, test) ->
+    map: parseMapArgs ['object'], (props, options, test) ->
       for own k, v of props
-        @mapValue k, v, optsOrTest, test
+        @mapValue k, v, options, test
       this
 
     # Map a value.
@@ -56,18 +70,13 @@ def (React) ->
     # @param {?object}   options Mapping options.
     # @param {?function} test    A function that determines whether the props
     #                            should be injected.
-    mapValue: (propName, value, optsOrTest, test) ->
+    mapValue: parseMapArgs ['string', '*'], (propName, value, options, test) ->
       factory = -> value
-      @mapFactory propName, factory, optsOrTest, test
+      @mapFactory propName, factory, options, test
       this
 
-    mapFactory: (propName, factory, optsOrTest, test) ->
-      if typeof optsOrTest is 'function'
-        options = {}
-        test = optsOrTest
-      else
-        options = optsOrTest ? {}
-        test ?= -> true
+    mapFactory: parseMapArgs ['string', 'function'], (propName, factory, options, test) ->
+      test ?= -> true
       @rules.push {propName, factory, options, test: @buildTest(test, options)}
       this
 
