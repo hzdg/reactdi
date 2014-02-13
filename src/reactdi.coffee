@@ -15,6 +15,11 @@ def (React) ->
       result[k] = v
     result
 
+  indexOf = [].indexOf or (item) ->
+    for el, i in this
+      return i if i of this and el is item
+    return -1
+
   injectors = []
 
   # Can the value be used to filter component types? Valid values are component
@@ -98,6 +103,33 @@ def (React) ->
       test ?= -> true
       @rules.push {propName, factory, options, test: @buildTest(test, componentType)}
       this
+
+    on: parseMapArgs ['string', 'function'], (componentType, eventName, listener, options, test) ->
+      handlerName = "on#{ eventName.charAt(0).toUpperCase() }#{ eventName[1..] }"
+      newOptions = clone options
+      newOptions.override = true
+      factory = (component, props) ->
+        # Set up the listener chain by creating a new 
+        handler = props[handlerName]
+        unless listeners = handler?.listeners
+          oldHandler = props[handlerName]
+          props[handlerName] = newHandler = (args...) ->
+            do (listener) =>
+              for listener in newHandler.listeners
+                listener.call this, args...
+            return
+          # newHandler.listeners = [oldHandler]
+          newHandler.listeners = if oldHandler then [oldHandler] else []
+          # Call the factory recursively to add the new handler.
+          return factory component, props
+
+        # Add the listener to the list. If it's already there, remove it
+        # first.
+        listeners.splice i, 1 if (i = indexOf.call listeners, listener) >= 0
+        listeners.push listener
+        handler
+
+      @mapFactory componentType, handlerName, factory, newOptions, test
 
     buildTest: (test, componentType) ->
       if not componentType?
