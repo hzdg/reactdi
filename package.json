@@ -1,6 +1,6 @@
 {
   "name": "reactdi",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Dependency injection for ReactJS",
   "main": "./reactdi.js",
   "directories": {
