@@ -174,7 +174,34 @@ string `"hey world"`.
 
 ## Limiting Injection Scope
 
-TODO
+Another drawback of React's `withContext` is that it doesn't allow for very
+targeted injection. With reactdi, you can specify that only specific component
+types be injected using either the class:
+
+```javascript
+var di = reactdi()
+    .map(MyWidget, {greeting: 'hello'});
+```
+
+…or the `displayName`:
+
+```javascript
+var di = reactdi()
+    .map('mywidget', {greeting: 'hello'});
+```
+
+For cases when this isn't enough, you can provide your own test function, which
+will be passed the component instance and its current props:
+
+```javascript
+var di = reactdi()
+    .map({greeting: 'hello'}, function (component, props) {
+        if (someCondition) {
+            return true;
+        }
+        return false;
+    });
+```
 
 
 ## Events
