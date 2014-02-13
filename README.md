@@ -14,7 +14,7 @@ descendants can become cumbersome and couple components unnecessarily. React's
 solution to this is to use `React.withContext`:
 
 ```javascript
-var GrandParent = React.createClass({
+var Grandparent = React.createClass({
     render: function () {
         return React.withContext({greeting: 'hello'}, function () {
             return Parent();
@@ -54,7 +54,7 @@ The usage for reactdi should be very familiar. Here are our previous components
 rewritten to use reactdi:
 
 ```javascript
-var GrandParent = React.createClass({
+var Grandparent = React.createClass({
     render: function () {
         var di = reactdi().map({greeting: 'hello'});
         return di(function () {
@@ -103,7 +103,7 @@ all of the injectors above them in the tree:
 
 
 ```javascript
-var GrandParent = React.createClass({
+var Grandparent = React.createClass({
     render: function () {
         var di = reactdi().map({greeting: 'hello'});
         return di(function () {
@@ -129,13 +129,13 @@ var Child = React.createClass({
 ```
 
 Here, `Child` will get `props.subject` from the injector in `Parent` and
-`props.greeting` from the injector in `GrandParent`.
+`props.greeting` from the injector in `Grandparent`.
 
 Sometimes, though, you may not want properties to be be passed down the
 hierarchy forever. In those cases, you can create isolated injectors:
 
 ```javascript
-var GrandParent = React.createClass({
+var Grandparent = React.createClass({
     render: function () {
         var di = reactdi().map({greeting: 'hello'});
         return di(function () {
@@ -168,7 +168,7 @@ var Child = React.createClass({
 
 In this case, the `Child` component will get `props.punctuation` from the
 injector in `Parent` but (since the `Parent` uses an isolate injector) it won't
-be injected with `GrandParent`'s `greeting` prop. That means it'll render the
+be injected with `Grandparent`'s `greeting` prop. That means it'll render the
 string `"hey world"`.
 
 
