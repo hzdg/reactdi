@@ -166,9 +166,9 @@ var Child = React.createClass({
 });
 ```
 
-In this case, the `Child` component will get `props.punctuation` from the
-injector in `Parent` but (since the `Parent` uses an isolate injector) it won't
-be injected with `Grandparent`'s `greeting` prop. That means it'll render the
+In this case, the `Child` component will get `props.subject` from the injector
+in `Parent` but (since the `Parent` uses an isolate injector) it won't be
+injected with `Grandparent`'s `greeting` prop. That means it'll render the
 string `"hey world"`.
 
 
