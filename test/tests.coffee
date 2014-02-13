@@ -15,10 +15,12 @@ Component = React.createClass
     (div null, @props.children)
 
 MessageContainer = React.createClass
+  displayName: 'mc'
   render: ->
     (div null, @props.message)
 
 MessageContainer2 = React.createClass
+  displayName: 'mc2'
   render: ->
     (div null, @props.message)
 
@@ -70,6 +72,14 @@ describe 'reactdi', ->
     it 'should support injection by class', ->
       reactdi()
         .map MessageContainer2, message: 'INJECTED'
+        .inject ->
+          c = (MessageContainer() )
+          c2 = (MessageContainer2() )
+          assert.notMatch React.renderComponentToString(c), /INJECTED/
+          assert.match React.renderComponentToString(c2), /INJECTED/
+    it 'should support injection by displayName', ->
+      reactdi()
+        .map 'mc2', message: 'INJECTED'
         .inject ->
           c = (MessageContainer() )
           c2 = (MessageContainer2() )
