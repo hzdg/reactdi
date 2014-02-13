@@ -29,6 +29,9 @@ IsolatedContainer = React.createClass
     reactdi(isolate: true).inject =>
       MessageContainer()
 
+Dog = React.createClass
+  render: -> (div() )
+
 
 describe 'reactdi', ->
   it 'should return an injector function', ->
@@ -85,3 +88,26 @@ describe 'reactdi', ->
           c2 = (MessageContainer2() )
           assert.notMatch React.renderComponentToString(c), /INJECTED/
           assert.match React.renderComponentToString(c2), /INJECTED/
+    it 'should allow the addition of event handlers', ->
+      barkCount = 0
+      injectedBarkCount = 0
+      reactdi()
+        .on 'bark', => injectedBarkCount += 1
+        .inject ->
+          winston = (Dog onBark: -> barkCount += 1)
+          winston.props.onBark()  # Normally this would be called from within the component, e.g. on user interaction.
+          assert.equal barkCount, 1
+          assert.equal injectedBarkCount, 1
+    it 'should allow the nested addition of event handlers', ->
+      barkCount = 0
+      injectedBarkCount = 0
+      reactdi()
+        .on 'bark', => injectedBarkCount += 1
+        .inject ->
+          reactdi()
+            .on 'bark', => injectedBarkCount += 1
+            .inject ->
+              winston = (Dog onBark: -> barkCount += 1)
+              winston.props.onBark()
+              assert.equal barkCount, 1
+              assert.equal injectedBarkCount, 2
