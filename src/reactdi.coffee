@@ -94,7 +94,7 @@ def (React) ->
       @rules = []
       @isolate = !!options?.isolate
 
-    map: parseMapArgs ['object'], (componentType, props, options, test) ->
+    mapValues: parseMapArgs ['object'], (componentType, props, options, test) ->
       for own k, v of props
         @mapValue componentType, k, v, options, test
       this
@@ -184,7 +184,7 @@ def (React) ->
     else
       props = injectorOrProps
       injector = new Injector
-      injector.map props, -> true
+      injector.mapValues props, -> true
 
     withInjector injector, scopedCallback
   reactdi

@@ -56,7 +56,7 @@ rewritten to use reactdi:
 ```javascript
 var Grandparent = React.createClass({
     render: function () {
-        var di = reactdi().map({greeting: 'hello'});
+        var di = reactdi().mapValues({greeting: 'hello'});
         return di(function () {
             return Parent();
         });
@@ -105,7 +105,7 @@ all of the injectors above them in the tree:
 ```javascript
 var Grandparent = React.createClass({
     render: function () {
-        var di = reactdi().map({greeting: 'hello'});
+        var di = reactdi().mapValues({greeting: 'hello'});
         return di(function () {
             return Parent();
         });
@@ -114,7 +114,7 @@ var Grandparent = React.createClass({
 
 var Parent = React.createClass({
     render: function () {
-        var di = reactdi().map({subject: 'world'});
+        var di = reactdi().mapValues({subject: 'world'});
         return di(function () {
             return Child();
         });
@@ -137,7 +137,7 @@ hierarchy forever. In those cases, you can create isolated injectors:
 ```javascript
 var Grandparent = React.createClass({
     render: function () {
-        var di = reactdi().map({greeting: 'hello'});
+        var di = reactdi().mapValues({greeting: 'hello'});
         return di(function () {
             return Parent();
         });
@@ -146,7 +146,7 @@ var Grandparent = React.createClass({
 
 var Parent = React.createClass({
     render: function () {
-        var di = reactdi({isolate: true}).map({subject: 'world'});
+        var di = reactdi({isolate: true}).mapValues({subject: 'world'});
         return di(function () {
             return Child();
         });
@@ -180,14 +180,14 @@ types be injected using either the class:
 
 ```javascript
 var di = reactdi()
-    .map(MyWidget, {greeting: 'hello'});
+    .mapValues(MyWidget, {greeting: 'hello'});
 ```
 
 …or the `displayName`:
 
 ```javascript
 var di = reactdi()
-    .map('mywidget', {greeting: 'hello'});
+    .mapValues('mywidget', {greeting: 'hello'});
 ```
 
 For cases when this isn't enough, you can provide your own test function, which
@@ -195,7 +195,7 @@ will be passed the component instance and its current props:
 
 ```javascript
 var di = reactdi()
-    .map({greeting: 'hello'}, function (component, props) {
+    .mapValues({greeting: 'hello'}, function (component, props) {
         if (someCondition) {
             return true;
         }
