@@ -221,9 +221,9 @@ method:
 ```javascript
 var Grandparent = React.createClass({
     render: function () {
-      return reactdi()
-        .on('change', function () { console.log('something changed!') })
-        .inject(function () {
+        var di = reactdi()
+            .on('change', function () { console.log('something changed!') });
+        return di(function () {
           return Parent();
         });
     }
@@ -258,9 +258,9 @@ types:
 ```javascript
 var Grandparent = React.createClass({
     render: function () {
-      return reactdi()
-        .on(Child, 'change', function () { console.log('a Child changed!') })
-        .inject(function () {
+        var di = reactdi()
+            .on(Child, 'change', function () { console.log('a Child changed!') });
+        return di(function () {
           return Parent();
         });
     }
