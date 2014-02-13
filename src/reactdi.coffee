@@ -19,7 +19,7 @@ def (React) ->
 
   # Can the value be used to filter component types? Valid values are component
   # classes and strings (which will be matched against the display name).
-  isComponentType = (val) -> typeof val is 'string ' or React.isValidClass val
+  isComponentType = (val) -> typeof val is 'string' or React.isValidClass val
 
   typesMatch = (values, types) ->
     for type, i in types
