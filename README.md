@@ -268,5 +268,75 @@ var Grandparent = React.createClass({
 ```
 
 
+## API
+
+Calling `reactdi` will return an injector. Below is the API for an injector
+("di"):
+
+<table>
+    <th>
+        <td>Method</td>
+        <td>Description</td>
+    </th>
+    <tr>
+        <td><code>di(<i>scopedCallback</i>)</code></td>
+        <td>
+            Injects all mapped props into any components created in the
+            <code>scopedCallback</code> function. This is a shorcut for
+            <code>di.inject()</code>.
+        </td>
+    </tr>
+    <tr>
+        <td><code>di.inject(<i>scopedCallback</i>)</code></td>
+        <td>
+            The long form of <code>di()</code>. This can be useful for chaining.
+            For example:
+
+            <code><pre>reactdi()
+    .mapValue(Widget, 'someProp', 5)
+    .on(Widget, 'change', handleChange)
+    .inject(function () {
+        return Button();
+    });</pre></code>
+        </td>
+    </tr>
+    <tr>
+        <td><code>di.mapValue(<i>componentType</i>?, <i>propName</i>, <i>value</i>, <i>options</i>?, <i>test</i>?)</code></td>
+        <td>
+            Maps a particular prop value for injection.
+            <code>componentType</code> may be either a React class or a
+            displayName. If provided, the mapping will only be used for the
+            matching components. For more fine-grained control, pass a
+            <code>test</code> function that returns a boolean.
+        </td>
+    </tr>
+    <tr>
+        <td><code>di.mapValue(<i>componentType</i>?, <i>props</i>, <i>options</i>?, <i>test</i>?)</code></td>
+        <td>
+            Like <code>di.mapValue</code>, but maps several values at once.
+            <code>props</code> is an object whose keys are prop names.
+        </td>
+    </tr>
+    <tr>
+        <td><code>di.mapFactory(<i>componentType</i>?, <i>propName</i>, <i>factory</i>, <i>options</i>?, <i>test</i>?)</code></td>
+        <td>
+            Like <code>di.mapValue</code>, but maps a factory function. This
+            function will be invoked and the result used for the prop value.
+            The factory function is passed the component and current props.
+        </td>
+    </tr>
+    <tr>
+        <td><code>di.on(<i>componentType</i>?, <i>eventName</i>, <i>listener</i>, <i>options</i>?, <i>test</i>?)</code></td>
+        <td>
+            Adds the provided listener as a callback for the given event.
+            Callback names are derived from the <code>eventName</code> by
+            prefixing "on" and capitalizing the first letter, so passing the
+            event name `"change"` will result in a binding to the `onChange`
+            prop.
+        </td>
+    </tr>
+</table>
+
+
 [ReactJS]: http://reactjs.org
 [callbacks]: http://facebook.github.io/react/docs/tutorial.html#callbacks-as-props
