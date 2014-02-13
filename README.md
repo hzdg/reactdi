@@ -248,9 +248,9 @@ var Child = React.createClass({
 });
 ```
 
-Now the `Grandparent` can know when one of its descendants has changed without.
-Notice that the `Parent` is blissfully unaware that this is happening; its
-callback will execute normally.
+Now the `Grandparent` can know when one of its descendants has changed. Notice
+that the `Parent` is blissfully unaware that this is happening; its callback
+will execute normally.
 
 Like the `map*` functions, `on` can be easily scoped to particular component
 types:
