@@ -20,7 +20,7 @@ def (React) ->
       return i if i of this and el is item
     return -1
 
-  injectors = []
+  activeInjectors = []
 
   # Can the value be used to filter component types? Valid values are component
   # classes and strings (which will be matched against the display name).
@@ -64,7 +64,7 @@ def (React) ->
     oldConstruct = constructor::construct
     constructor::construct = (initialProps, args...) ->
       props = initialProps or {}
-      for injector in injectors by -1
+      for injector in activeInjectors by -1
         props = injector.buildProps this, props
         break if injector.isolate
       oldConstruct.call this, props, args...
@@ -72,9 +72,9 @@ def (React) ->
     Cls
 
   withInjector = (injector, scopedCallback) ->
-    injectors.push injector
+    activeInjectors.push injector
     try result = scopedCallback()
-    finally injectors.pop()
+    finally activeInjectors.pop()
     result
 
   class Injector
