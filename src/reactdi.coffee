@@ -17,19 +17,38 @@ def (React) ->
 
   injectors = []
 
+  # Can the value be used to filter component types? Valid values are component
+  # classes and strings (which will be matched against the display name).
+  isComponentType = (val) -> typeof val is 'string ' or React.isValidClass val
+
+  typesMatch = (values, types) ->
+    for type, i in types
+      return false unless type is '*' or type is typeof values[i]
+    return true
+
   # A utility for parsing args for the map* methods. Returns a new function
   # that invokes the provided one with the correct positional args.
+  #
+  # The map* functions have signatures that look like this:
+  #
+  #     (componentType?, mapArgs..., options?, test?)
+  #
+  # This function accounts for missing optional args and normalizes the
+  # signature.
   parseMapArgs = (mapArgTypes, fn) ->
     (args...) ->
-      newArgs = args[...mapArgTypes.length]
-      [optsOrTest, test] = args[mapArgTypes...]
+      componentType = args.shift() if not args[0]? or isComponentType(args[0]) and typesMatch args[1..mapArgTypes.length], mapArgTypes
+      mapArgs = args[...mapArgTypes.length]
+      [optsOrTest, test] = args[mapArgTypes.length...]
+
       if typeof optsOrTest is 'function'
         options = {}
         test = optsOrTest
       else
         options = optsOrTest ? {}
         test ?= -> true
-      fn.apply this, newArgs.concat [options, test]
+
+      fn.call this, componentType, mapArgs..., options, test
 
   # Patch the class factory to add dependencies to props dict.
   oldCreateClass = React.createClass
@@ -58,9 +77,9 @@ def (React) ->
       @rules = []
       @isolate = !!options?.isolate
 
-    map: parseMapArgs ['object'], (props, options, test) ->
+    map: parseMapArgs ['object'], (componentType, props, options, test) ->
       for own k, v of props
-        @mapValue k, v, options, test
+        @mapValue componentType, k, v, options, test
       this
 
     # Map a value.
@@ -70,20 +89,25 @@ def (React) ->
     # @param {?object}   options Mapping options.
     # @param {?function} test    A function that determines whether the props
     #                            should be injected.
-    mapValue: parseMapArgs ['string', '*'], (propName, value, options, test) ->
+    mapValue: parseMapArgs ['string', '*'], (componentType, propName, value, options, test) ->
       factory = -> value
-      @mapFactory propName, factory, options, test
+      @mapFactory componentType, propName, factory, options, test
       this
 
-    mapFactory: parseMapArgs ['string', 'function'], (propName, factory, options, test) ->
+    mapFactory: parseMapArgs ['string', 'function'], (componentType, propName, factory, options, test) ->
       test ?= -> true
-      @rules.push {propName, factory, options, test: @buildTest(test, options)}
+      @rules.push {propName, factory, options, test: @buildTest(test, componentType)}
       this
 
-    ruleMatches: (ruleOptions, args...) -> true
-
-    buildTest: (test, ruleOptions) ->
-      (args...) => !!(@ruleMatches(ruleOptions, args...) or test args...)
+    buildTest: (test, componentType) ->
+      if not componentType?
+        test
+      else if typeof componentType is 'string'
+        (component, props) =>
+          !!(componentType is component.constructor?.displayName and test component, props)
+      else
+        (component, props) =>
+          !!(component instanceof componentType.componentConstructor and test component, props)
 
     buildProps: (component, defaults) ->
       props = clone defaults
