@@ -14,16 +14,18 @@ Component = React.createClass
   render: ->
     (div null, @props.children)
 
-
-OtherComponent = React.createClass
+MessageContainer = React.createClass
   render: ->
     (div null, @props.message)
 
+MessageContainer2 = React.createClass
+  render: ->
+    (div null, @props.message)
 
 IsolatedContainer = React.createClass
   render: ->
     reactdi(isolate: true).inject =>
-      OtherComponent()
+      MessageContainer()
 
 
 describe 'reactdi', ->
@@ -55,7 +57,7 @@ describe 'reactdi', ->
       reactdi()
         .map message: 'INJECTED'
         .inject ->
-          c = (Component null, (OtherComponent() ))
+          c = (Component null, (MessageContainer() ))
           html = React.renderComponentToString c
           assert.match html, /INJECTED/
     it "shouldn't inject into isolated children", ->
@@ -65,3 +67,11 @@ describe 'reactdi', ->
           c = (Component null, (IsolatedContainer() ))
           html = React.renderComponentToString c
           assert.notMatch html, /INJECTED/
+    it 'should support injection by class', ->
+      reactdi()
+        .map MessageContainer2, message: 'INJECTED'
+        .inject ->
+          c = (MessageContainer() )
+          c2 = (MessageContainer2() )
+          assert.notMatch React.renderComponentToString(c), /INJECTED/
+          assert.match React.renderComponentToString(c2), /INJECTED/
