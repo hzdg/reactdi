@@ -1,7 +1,11 @@
 reactdi
 =======
 
-Dependency injection for React components.
+Dependency injection for React components!
+
+* Uses props instead of inventing a new concept
+* Components don't need to know about reactdi so they stay portable
+* No need to rewrite existing components
 
 **WARNING: This project is experimental!**
 
@@ -10,48 +14,10 @@ Dependency injection for React components.
 
 In [ReactJS], the data is normally passed directly from parent to child as
 props. However, when working with large component trees, forwarding props to
-descendants can become cumbersome and couple components unnecessarily. React's
-solution to this is to use `React.withContext`:
-
-```javascript
-var Grandparent = React.createClass({
-    render: function () {
-        return React.withContext({greeting: 'hello'}, function () {
-            return Parent();
-        });
-    }
-});
-
-var Parent = React.createClass({
-    render: function () {
-        return Child();
-    }
-});
-
-var Child = React.createClass({
-    render: function () {
-        return div(null, this.context.greeting);
-    }
-});
-```
-
-In this example, `Child` will render the `"hello"` greeting even though it
-wasn't passed via props.
-
-While this approach works, your components now need to know what data they get
-from props and what comes from context. If you change your mind about how data
-is given to the component, you need to rewrite your component. Components that
-want to support both will have to be written to do so.
-
-**reactdi uses an alternative method for getting data to deeply nested
-components:** Instead of adding a special property (like `context`), you simply
-inject props.
+descendants can become cumbersome and couple components unnecessarily.
 
 
 ## Example
-
-The usage for reactdi should be very familiar. Here are our previous components
-rewritten to use reactdi:
 
 ```javascript
 var Grandparent = React.createClass({
@@ -76,16 +42,15 @@ var Child = React.createClass({
 });
 ```
 
-As you can see, there are only a few differences from before: 1) we create a
-reactdi injector and map properties to values, 2) we use that in the `render()`
-method in place of `React.withContext`, and 3) our `Child` gets its data from
-its `props` object instead of `context`. If a prop isn't provided, the component
-will continue to use its default value (from `getDefaultProps`). If you want to
-override an injected value, you can just pass a value from the parent as usual.
+The basic idea is this:
 
-*Note: we don't have to create the `di` instance in the `render()` method—if the
-values are constant, it would probably be a good idea to do that in
-`componentWillMount` instead.*
+1. We create a reactdi injector and map properties to values
+2. We use that in the `render()` method in place of `React.withContext`
+3. Our `Child` gets its data from its `props` object as normal
+
+If a prop isn't provided, the component will continue to use its default value
+(from `getDefaultProps`). If you want to override an injected value, you can
+just pass a value from the parent as usual.
 
 This approach has two big benefits:
 
@@ -94,89 +59,20 @@ This approach has two big benefits:
 2. Components don't need to be rewritten to take advantage of dependency
    injection. Just wire them up at a higher level.
 
+This kind of dependency injection makes your components super portable!
+Injectors can even be nested—but don't go overboard! Keep your mappings together
+to minimize [action at a distance][1].
 
-## Isolate Injectors
-
-There's no rule that says you can only have one injector for your hierarchy—feel
-free to create as many as you want. Normally, components will receive props from
-all of the injectors above them in the tree:
-
-
-```javascript
-var Grandparent = React.createClass({
-    render: function () {
-        var di = reactdi().mapValues({greeting: 'hello'});
-        return di(function () {
-            return Parent();
-        });
-    }
-});
-
-var Parent = React.createClass({
-    render: function () {
-        var di = reactdi().mapValues({subject: 'world'});
-        return di(function () {
-            return Child();
-        });
-    }
-});
-
-var Child = React.createClass({
-    render: function () {
-        return div(null, this.props.greeting + ', ' + this.props.subject);
-    }
-});
-```
-
-Here, `Child` will get `props.subject` from the injector in `Parent` and
-`props.greeting` from the injector in `Grandparent`.
-
-Sometimes, though, you may not want properties to be be passed down the
-hierarchy forever. In those cases, you can create isolated injectors:
-
-```javascript
-var Grandparent = React.createClass({
-    render: function () {
-        var di = reactdi().mapValues({greeting: 'hello'});
-        return di(function () {
-            return Parent();
-        });
-    }
-});
-
-var Parent = React.createClass({
-    render: function () {
-        var di = reactdi({isolate: true}).mapValues({subject: 'world'});
-        return di(function () {
-            return Child();
-        });
-    }
-});
-
-var Child = React.createClass({
-    getDefaultProps: function () {
-        return {
-            greeting: 'hey',
-            subject: 'you'
-        }
-    },
-    render: function () {
-        return div(null, this.props.greeting + ', ' + this.props.subject);
-    }
-});
-```
-
-In this case, the `Child` component will get `props.subject` from the injector
-in `Parent` but (since the `Parent` uses an isolate injector) it won't be
-injected with `Grandparent`'s `greeting` prop. That means it'll render the
-string `"hey world"`.
+*Note: we don't have to create the `di` instance in the `render()` method—if the
+values are constant, it would probably be a good idea to do that in
+`componentWillMount` instead.*
 
 
 ## Limiting Injection Scope
 
-Another drawback of React's `withContext` is that it doesn't allow for very
-targeted injection. With reactdi, you can specify that only specific component
-types be injected using either the class:
+The example above showed how to inject a prop into subcomponents, but the
+injection wasn't very targeted. With reactdi, you can (and probably should!)
+specify that only specific component types be injected using either the class:
 
 ```javascript
 var di = reactdi()
@@ -267,6 +163,10 @@ var Grandparent = React.createClass({
 });
 ```
 
+This kind of event handling is great for responding to changes in your component
+from higher in the component tree without coupling your components to the
+response.
+
 
 ## API
 
@@ -338,5 +238,125 @@ Calling `reactdi` will return an injector. Below is the API for an injector
 </table>
 
 
+## Isolate Injectors
+
+There's no rule that says you can only have one injector for your hierarchy—feel
+free to create as many as you want. Normally, components will receive props from
+all of the injectors above them in the tree:
+
+
+```javascript
+var Grandparent = React.createClass({
+    render: function () {
+        var di = reactdi().mapValues({greeting: 'hello'});
+        return di(function () {
+            return Parent();
+        });
+    }
+});
+
+var Parent = React.createClass({
+    render: function () {
+        var di = reactdi().mapValues({subject: 'world'});
+        return di(function () {
+            return Child();
+        });
+    }
+});
+
+var Child = React.createClass({
+    render: function () {
+        return div(null, this.props.greeting + ', ' + this.props.subject);
+    }
+});
+```
+
+Here, `Child` will get `props.subject` from the injector in `Parent` and
+`props.greeting` from the injector in `Grandparent`.
+
+Sometimes, though, you may not want properties to be be passed down the
+hierarchy forever. In those cases, you can create isolated injectors:
+
+```javascript
+var Grandparent = React.createClass({
+    render: function () {
+        var di = reactdi().mapValues({greeting: 'hello'});
+        return di(function () {
+            return Parent();
+        });
+    }
+});
+
+var Parent = React.createClass({
+    render: function () {
+        var di = reactdi({isolate: true}).mapValues({subject: 'world'});
+        return di(function () {
+            return Child();
+        });
+    }
+});
+
+var Child = React.createClass({
+    getDefaultProps: function () {
+        return {
+            greeting: 'hey',
+            subject: 'you'
+        }
+    },
+    render: function () {
+        return div(null, this.props.greeting + ', ' + this.props.subject);
+    }
+});
+```
+
+In this case, the `Child` component will get `props.subject` from the injector
+in `Parent` but (since the `Parent` uses an isolate injector) it won't be
+injected with `Grandparent`'s `greeting` prop. That means it'll render the
+string `"hey world"`.
+
+
+## vs `React.withContext`
+
+React's solution to making sense of deep hierarchies is to use
+`React.withContext`:
+
+```javascript
+var Grandparent = React.createClass({
+    render: function () {
+        return React.withContext({greeting: 'hello'}, function () {
+            return Parent();
+        });
+    }
+});
+
+var Parent = React.createClass({
+    render: function () {
+        return Child();
+    }
+});
+
+var Child = React.createClass({
+    render: function () {
+        return div(null, this.context.greeting);
+    }
+});
+```
+
+In this example, `Child` will render the `"hello"` greeting even though it
+wasn't passed via props.
+
+While this approach works, your components now need to know what data they get
+from props and what comes from context. If you change your mind about how data
+is given to the component, you need to rewrite your component. Components that
+want to support both will have to be written to do so.
+
+reactdi uses an alternative method for getting data to deeply nested components:
+Instead of adding a special property (like `context`), you simply inject props.
+
+Check out the [Example](#example) section of this document to see how to write
+the above example using reactdi. It should look pretty similar!
+
+
+[1]: http://en.wikipedia.org/wiki/Action_at_a_distance_(computer_programming)
 [ReactJS]: http://reactjs.org
 [callbacks]: http://facebook.github.io/react/docs/tutorial.html#callbacks-as-props
