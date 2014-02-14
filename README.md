@@ -336,6 +336,9 @@ var Parent = React.createClass({
 });
 
 var Child = React.createClass({
+    contextTypes: {
+        greeting: React.PropTypes.string
+    },
     render: function () {
         return div(null, this.context.greeting);
     }
