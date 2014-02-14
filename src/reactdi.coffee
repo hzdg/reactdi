@@ -55,7 +55,11 @@ def (React) ->
 
       fn.call this, componentType, mapArgs..., options, test
 
-  # Patch the class factory to add dependencies to props dict.
+  # Patch the component constructor mixin to add dependencies to props dict.
+  # This relies on the fact that the mixin's constructor is bound very late by
+  # virtue of being called by `ReactCompositeComponentMixin.construct()`.
+  # Therefore, we can monkey patch it any time before the component is
+  # constructed.
   Mixin = React.__internals.Component.Mixin
   oldConstruct = Mixin.construct
   Mixin.construct = (initialProps, args...) ->
