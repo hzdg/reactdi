@@ -115,19 +115,15 @@ def (React) ->
       newOptions = clone options
       newOptions.override = true
       factory = (component, props) ->
-        # Set up the listener chain by creating a new 
+        # Set up the listener chain by creating a new handler that delegates to
+        # a list of functions (the listeners).
         handler = props[handlerName]
         unless listeners = handler?.listeners
           oldHandler = props[handlerName]
-          props[handlerName] = newHandler = (args...) ->
-            do (listener) =>
-              for listener in newHandler.listeners
-                listener.call this, args...
+          handler = (args...) ->
+            fn.call this, args... for fn in handler.listeners
             return
-          # newHandler.listeners = [oldHandler]
-          newHandler.listeners = if oldHandler then [oldHandler] else []
-          # Call the factory recursively to add the new handler.
-          return factory component, props
+          listeners = handler.listeners = if oldHandler then [oldHandler] else []
 
         # Add the listener to the list. If it's already there, remove it
         # first.
