@@ -71,6 +71,7 @@ def (React) ->
       # Restore the injectors that were active when the class was created for
       # the duration of the render method.
       withInjectors @_injectors, => oldRender.call this, args...
+    return
 
   # Add a list of injectors to the stack for the duration of `scopedCallback`
   withInjectors = (injectors, scopedCallback) ->
