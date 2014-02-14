@@ -91,7 +91,7 @@
       }
       oldConstruct.call.apply(oldConstruct, [this, props].concat(__slice.call(args)));
       oldRender = this.render;
-      return this.render = function() {
+      this.render = function() {
         var args,
           _this = this;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
