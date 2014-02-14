@@ -17,7 +17,7 @@
   };
 
   def(function(React) {
-    var Injector, activeInjectors, clone, indexOf, isComponentType, oldCreateClass, parseMapArgs, reactdi, typesMatch, withInjector, withInjectors;
+    var Injector, Mixin, activeInjectors, clone, indexOf, isComponentType, oldConstruct, parseMapArgs, reactdi, typesMatch, withInjector, withInjectors;
     clone = function(obj) {
       var k, result, v;
       result = {};
@@ -75,29 +75,23 @@
         return fn.call.apply(fn, [this, componentType].concat(__slice.call(mapArgs), [options], [test]));
       };
     };
-    oldCreateClass = React.createClass;
-    React.createClass = function() {
-      var Cls, args, constructor, oldConstruct, oldRender;
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      Cls = oldCreateClass.apply(null, args);
-      constructor = Cls.componentConstructor;
-      oldConstruct = constructor.prototype.construct;
-      constructor.prototype.construct = function() {
-        var args, initialProps, injector, props, _i;
-        initialProps = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-        props = initialProps || {};
-        this._injectors = activeInjectors.slice(0);
-        for (_i = activeInjectors.length - 1; _i >= 0; _i += -1) {
-          injector = activeInjectors[_i];
-          props = injector.buildProps(this, props);
-          if (injector.isolate) {
-            break;
-          }
+    Mixin = React.__internals.Component.Mixin;
+    oldConstruct = Mixin.construct;
+    Mixin.construct = function() {
+      var args, initialProps, injector, oldRender, props, _i;
+      initialProps = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      props = initialProps || {};
+      this._injectors = activeInjectors.slice(0);
+      for (_i = activeInjectors.length - 1; _i >= 0; _i += -1) {
+        injector = activeInjectors[_i];
+        props = injector.buildProps(this, props);
+        if (injector.isolate) {
+          break;
         }
-        return oldConstruct.call.apply(oldConstruct, [this, props].concat(__slice.call(args)));
-      };
-      oldRender = constructor.prototype.render;
-      constructor.prototype.render = function() {
+      }
+      oldConstruct.call.apply(oldConstruct, [this, props].concat(__slice.call(args)));
+      oldRender = this.render;
+      return this.render = function() {
         var args,
           _this = this;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -105,7 +99,6 @@
           return oldRender.call.apply(oldRender, [_this].concat(__slice.call(args)));
         });
       };
-      return Cls;
     };
     withInjectors = function(injectors, scopedCallback) {
       var result;
@@ -166,27 +159,20 @@
         newOptions = clone(options);
         newOptions.override = true;
         factory = function(component, props) {
-          var handler, i, listeners, newHandler, oldHandler;
+          var handler, i, listeners, oldHandler;
           handler = props[handlerName];
           if (!(listeners = handler != null ? handler.listeners : void 0)) {
             oldHandler = props[handlerName];
-            props[handlerName] = newHandler = function() {
-              var args,
-                _this = this;
+            handler = function() {
+              var args, fn, _i, _len, _ref;
               args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-              (function(listener) {
-                var _i, _len, _ref, _results;
-                _ref = newHandler.listeners;
-                _results = [];
-                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                  listener = _ref[_i];
-                  _results.push(listener.call.apply(listener, [_this].concat(__slice.call(args))));
-                }
-                return _results;
-              })(listener);
+              _ref = handler.listeners;
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                fn = _ref[_i];
+                fn.call.apply(fn, [this].concat(__slice.call(args)));
+              }
             };
-            newHandler.listeners = oldHandler ? [oldHandler] : [];
-            return factory(component, props);
+            listeners = handler.listeners = oldHandler ? [oldHandler] : [];
           }
           if ((i = indexOf.call(listeners, listener)) >= 0) {
             listeners.splice(i, 1);
