@@ -56,27 +56,21 @@ def (React) ->
       fn.call this, componentType, mapArgs..., options, test
 
   # Patch the class factory to add dependencies to props dict.
-  oldCreateClass = React.createClass
-  React.createClass = (args...) ->
-    Cls = oldCreateClass args...
-    constructor = Cls.componentConstructor
+  Mixin = React.__internals.Component.Mixin
+  oldConstruct = Mixin.construct
+  Mixin.construct = (initialProps, args...) ->
+    props = initialProps or {}
+    @_injectors = activeInjectors[..] # Store the currently active injectors.
+    for injector in activeInjectors by -1
+      props = injector.buildProps this, props
+      break if injector.isolate
+    oldConstruct.call this, props, args...
 
-    oldConstruct = constructor::construct
-    constructor::construct = (initialProps, args...) ->
-      props = initialProps or {}
-      @_injectors = activeInjectors[..] # Store the currently active injectors.
-      for injector in activeInjectors by -1
-        props = injector.buildProps this, props
-        break if injector.isolate
-      oldConstruct.call this, props, args...
-
-    oldRender = constructor::render
-    constructor::render = (args...) ->
+    oldRender = @render
+    @render = (args...) ->
       # Restore the injectors that were active when the class was created for
       # the duration of the render method.
       withInjectors @_injectors, => oldRender.call this, args...
-
-    Cls
 
   # Add a list of injectors to the stack for the duration of `scopedCallback`
   withInjectors = (injectors, scopedCallback) ->
