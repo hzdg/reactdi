@@ -18,12 +18,12 @@ module.exports = (grunt) ->
           clearRequireCache: true
           require: 'coffee-script/register'
           grep: grunt.option 'grep'
-        src: ['test/**/*.coffee', 'test/**/*.litcoffee']
+        src: ['test/**/*.?(lit)coffee']
     watch:
       options:
         atBegin: true
       lib:
-        files: ['src/*.litcoffee', 'src/*.coffee']
+        files: ['src/*.?(lit)coffee']
         tasks: ['build']
     bump:
       options:
