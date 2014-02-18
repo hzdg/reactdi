@@ -26,7 +26,7 @@ MessageContainer2 = React.createClass
 
 IsolatedContainer = React.createClass
   render: ->
-    reactdi(isolate: true).inject =>
+    reactdi().injectRoot =>
       MessageContainer()
 
 Dog = React.createClass

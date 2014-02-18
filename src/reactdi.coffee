@@ -20,7 +20,13 @@ def (React) ->
       return i if i of this and el is item
     return -1
 
-  activeInjectors = []
+  # Represents an injection point—in other words, an invocation of
+  # `Injector::inject`
+  class Injection
+    constructor: (@injector, options) ->
+      @root = !!options?.root
+
+  activeInjections = []
 
   # Can the value be used to filter component types? Valid values are component
   # classes and strings (which will be matched against the display name).
@@ -64,34 +70,34 @@ def (React) ->
   oldConstruct = Mixin.construct
   Mixin.construct = (initialProps, args...) ->
     props = initialProps or {}
-    @_injectors = activeInjectors[..] # Store the currently active injectors.
-    for injector in activeInjectors by -1
-      props = injector.buildProps this, props
-      break if injector.isolate
+    @_injections = activeInjections[..] # Store the currently active injection.
+    for injection in activeInjections by -1
+      props = injection.injector.buildProps this, props
+      break if injection?.root
     oldConstruct.call this, props, args...
 
     oldRender = @render
     @render = (args...) ->
-      # Restore the injectors that were active when the class was created for
+      # Restore the injections that were active when the class was created for
       # the duration of the render method.
-      withInjectors @_injectors, => oldRender.call this, args...
+      withInjections @_injections, => oldRender.call this, args...
     return
 
-  # Add a list of injectors to the stack for the duration of `scopedCallback`
-  withInjectors = (injectors, scopedCallback) ->
-    activeInjectors.push injectors...
+  # Add a list of injections to the stack for the duration of `scopedCallback`
+  withInjections = (injections, scopedCallback) ->
+    activeInjections.push injections...
     try result = scopedCallback()
-    finally activeInjectors = activeInjectors[...-injectors.length]
+    finally activeInjections = activeInjections[...-injections.length]
     result
 
-  # Add a single injector to the stack for the duration of `scopedCallback`
-  withInjector = (injector, scopedCallback) ->
-    withInjectors [injector], scopedCallback
+  # Add a single injection point to the stack for the duration of
+  # `scopedCallback`
+  withInjection = (injections, scopedCallback) ->
+    withInjections [injections], scopedCallback
 
   class Injector
     constructor: (options) ->
       @rules = []
-      @isolate = !!options?.isolate
 
     mapValues: parseMapArgs ['object'], (componentType, props, options, test) ->
       for own k, v of props
@@ -158,6 +164,9 @@ def (React) ->
     inject: (scopedCallback) ->
       reactdi.inject this, scopedCallback
 
+    injectRoot: (scopedCallback) ->
+      reactdi.injectRoot this, scopedCallback
+
     @create = (args...) ->
       # Create an injector shortcut function
       inject = (args...) -> inject.inject args...
@@ -171,7 +180,7 @@ def (React) ->
   # Assemble and return the module.
   reactdi = (args...) -> reactdi.Injector.create args...
   reactdi.Injector = Injector
-  reactdi.inject = (injectorOrProps, scopedCallback) ->
+  inject = (injectorOrProps, scopedCallback, opts) ->
     if injectorOrProps instanceof Injector or typeof injectorOrProps is 'function'
       # This is either an Injector instance or shortcut inject function; not a
       # props object.
@@ -181,5 +190,11 @@ def (React) ->
       injector = new Injector
       injector.mapValues props, -> true
 
-    withInjector injector, scopedCallback
+    withInjection new Injection(injector, opts), scopedCallback
+  reactdi.inject = (injectorOrProps, scopedCallback) ->
+    inject injectorOrProps, scopedCallback
+  reactdi.injectRoot = (injectorOrProps, scopedCallback) ->
+    inject injectorOrProps, scopedCallback, root: true
+
+
   reactdi

@@ -238,7 +238,7 @@ Calling `reactdi` will return an injector. Below is the API for an injector
 </table>
 
 
-## Isolate Injectors
+## Root Injectors
 
 There's no rule that says you can only have one injector for your hierarchy—feel
 free to create as many as you want. Normally, components will receive props from
@@ -275,7 +275,7 @@ Here, `Child` will get `props.subject` from the injector in `Parent` and
 `props.greeting` from the injector in `Grandparent`.
 
 Sometimes, though, you may not want properties to be be passed down the
-hierarchy forever. In those cases, you can create isolated injectors:
+hierarchy forever. In those cases, you can create root injectors:
 
 ```javascript
 var Grandparent = React.createClass({
@@ -289,8 +289,8 @@ var Grandparent = React.createClass({
 
 var Parent = React.createClass({
     render: function () {
-        var di = reactdi({isolate: true}).mapValues({subject: 'world'});
-        return di(function () {
+        var di = reactdi().mapValues({subject: 'world'});
+        return di.injectRoot(function () {
             return Child();
         });
     }
@@ -310,7 +310,7 @@ var Child = React.createClass({
 ```
 
 In this case, the `Child` component will get `props.subject` from the injector
-in `Parent` but (since the `Parent` uses an isolate injector) it won't be
+in `Parent` but (since the `Parent` uses a root injector) it won't be
 injected with `Grandparent`'s `greeting` prop. That means it'll render the
 string `"hey world"`.
 
