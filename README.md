@@ -67,6 +67,10 @@ to minimize [action at a distance][1].
 values are constant, it would probably be a good idea to do that in
 `componentWillMount` instead.*
 
+*Note: props are injected when the component is constructed. Simply using a
+component inside of your `di`-wrapped function isn't enough—you have to
+construct it there.*
+
 
 ## Limiting Injection Scope
 
